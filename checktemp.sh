@@ -15,17 +15,8 @@ declare -a HouseCodes=(M E C K O G A I N F D L P H B J)
 
 declare -a units_x10_to_num=(6 E 2 A 1 9 5 D 7 F 3 B 0 8 4 C);
 
-# House codes - order for PreDim codes = 0 - 15 for Preset Dim (4) codes and 16 - 31 for Preset Dim (12) Codes.
-declare -a PresetDimHouseCodes=(M N O P C D A B E F G H K L I J)
-# Preset Dim(4) - The "4" specifies a "Preset Dim1" command (0 to 48% bright). This must be used with a "letter code" to specify the "dim level" 
-# Codes for levels 0 - 15
-declare -a PresetDim1=(0 3 6 10 13 16 19 23 26 29 32 35 38 42 45 48)
-# reset Dim(12) - The "12" specifies a "Preset Dim2" command (52 to 100% bright). This must be used with a "letter code" to specify the "dim level" 
-# Codes for levels 16 - 31
-declare -a PresetDim2=(52 55 58 61 65 68 71 74 77 81 84 87 90 94 97 100)
-# preset Dim % levels
-# codes for level 0 - 31
-declare -a PresetDimLevels=(0 3 6 10 13 16 19 23 26 29 32 35 38 42 45 48 52 55 58 61 65 68 71 74 77 81 84 87 90 94 97 100)
+
+
 # preset Dim to temp tables for all House_code in one array
 declare -a PresetDim=(-59 -27 5 37 69 101 -58 -26 6 38 70 102 -57 -25 7 39 71 103 -56 -24 8 40 72 104 -55 -23 9 41 73 105 -54 -22 10 42 74 106 -53 -21 11 43 75 107 -52 -22 12 44 76 108 -51 -19 13 45 77 109 -50 -18 14 46 78 110 -49 -17 15 47 79 111 -48 -16 16 48 80 112 -47 -15 17 49 81 113 -46 -14 18 50 82 114 -45 -13 19 51 83 115 -44 -12 20 52 84 116 -43 -11 21 53 85 117 -42 -10 22 54 86 118 -41 -9 23 55 87 119 -40 -8 24 56 88 120 -39 -7 25 57 89 121 -38 -6 26 58 90 122 -37 -5 27 59 91 123 -36 -4 28 60 92 124 -35 -3 29 61 93 125 -34 -2 30 62 94 126 -33 -1 31 63 95 127 -32 0 32 64 96 128 -31 1 33 65 97 129 -30 2 34 66 98 130 -29 3 35 67 99 131);
 # preset Dim to temp tables for House_code+11
@@ -42,6 +33,22 @@ declare -a PresetDim15=(68 69 70 71 72 73 74 75 76 77 78 79 80 81 82 83 84 85 86
 declare -a PresetDim16=(100 101 102 103 104 105 106 107 108 109 110 111 112 113 114 115 116 117 118 119 120 121 122 123 124 125 126 127 128 129 130 131);
 
 
+# preset Dim % levels
+# codes for level 0 - 31
+declare -a PresetDimLevels=(0 3 6 10 13 16 19 23 26 29 32 35 38 42 45 48 52 55 58 61 65 68 71 74 77 81 84 87 90 94 97 100)
+
+
+# House codes - order for PreDim codes = 0 - 15 for Preset Dim (4) codes and 16 - 31 for Preset Dim (12) Codes.
+declare -a PresetDimHouseCodes=(M N O P C D A B E F G H K L I J)
+# Preset Dim(4) - The "4" specifies a "Preset Dim1" command (0 to 48% bright). This must be used with a "letter code" to specify the "dim level" 
+# Codes for levels 0 - 15
+declare -a PresetDim1=(0 3 6 10 13 16 19 23 26 29 32 35 38 42 45 48)
+# reset Dim(12) - The "12" specifies a "Preset Dim2" command (52 to 100% bright). This must be used with a "letter code" to specify the "dim level" 
+# Codes for levels 16 - 31
+declare -a PresetDim2=(52 55 58 61 65 68 71 74 77 81 84 87 90 94 97 100)
+
+
+
 num_rows=32
 num_columns=6
 HouseCode="D"
@@ -53,7 +60,7 @@ dosendemail () {
 pass=`cat ~/bin/pass`
 from="riccip@ripnet.com"
 to="puskyer@gmail.com"
-smtpserver="smtp.xplornet.com"
+smtpserver="smtp.xplornet.com:587"
 
 sendemail -f $from -t $to -u $msg -m "$msg" -s $smtpserver -o tls=no -xu $from -xp $pass
 
@@ -103,34 +110,19 @@ else
 fi
 
 
-TempData=`cat /tmp/tempdata.txt  | grep "Raw data received" | tr -s " " | cut -d " " -f9`
+# TempData=`cat /tmp/tempdata.txt  | grep "Raw data received" | tr -s " " | cut -d " " -f9`
+HouseUnitCode=`cat /tmp/tempdata.txt  | grep "Rx PL HouseUnit:" | tr -s " " | cut -d " " -f6 | cut -d " " -f5`
+TempRow=`cat /tmp/tempdata.txt  | grep "Rx PL House: " | tr -s " " | cut -d " " -f6`
 
-ReceivedHouseCodeHex=`echo $TempData | cut -d " " -f1`
-ReceivedCodeHex=`echo $TempData | cut -d " " -f2`
 
-RawHouseUnitHex=`echo $ReceivedHouseCodeHex | cut -c1`
-RawUnitCodeHex=`echo $ReceivedHouseCodeHex | cut -c2`
-
-RawUnitCodeDec=`echo "ibase=16; $RawUnitCodeHex" | bc`
-
-HouseUnitCode=$(Get_House_code "${RawHouseUnitHex}")
-UnitCode=$(Get_array_index "${RawUnitCodeDec}" "${units_x10_to_num[@]}")
-
-TempHouseCode=$HouseUnitCode$UnitCode
-
-RawdataHouseUnitHex=`echo $ReceivedCodeHex | cut -c1`
-RawdataUnitHex=`echo $ReceivedCodeHex | cut -c2`
-
-RawdataHouseUnitDec=`echo "ibase=16; $RawdataHouseUnitHex" | bc`
-RawdataUnitDec=`echo "ibase=16; $RawdataUnitHex" | bc`
-
-TempCode=$(($RawdataHouseUnitDec+$RawdataUnitDec))
+TempIndex=$(Get_array_index "${TempRow}" "${PresetDimHouseCodes[@]}")
+echo ${PresetDim14[$TempIndex]}
 
 
 LastTemp=`cat /tmp/LastTemp.txt`
 
 
-case  $TempHouseCode in
+case  $HouseUnitCode in
 $HouseCode"11")
 	if [ ! "$LastTemp" = "${PresetDim11[$TempCode]}" ] ; then
 		echo ${PresetDim11[$TempCode]} >/tmp/LastTemp.txt
@@ -183,4 +175,28 @@ $HouseCode"16")
 		  echo "not one of the HouseCodes."
 		;;
 esac
+
+
+
+
+#ReceivedHouseCodeHex=`echo $TempData | cut -d " " -f1`
+#ReceivedCodeHex=`echo $TempData | cut -d " " -f2`
+
+#RawHouseUnitHex=`echo $ReceivedHouseCodeHex | cut -c1`
+#RawUnitCodeHex=`echo $ReceivedHouseCodeHex | cut -c2`
+
+#RawUnitCodeDec=`echo "ibase=16; $RawUnitCodeHex" | bc`
+
+#HouseUnitCode=$(Get_House_code "${RawHouseUnitHex}")
+#UnitCode=$(Get_array_index "${RawUnitCodeDec}" "${units_x10_to_num[@]}")
+
+
+
+#RawdataHouseUnitHex=`echo $ReceivedCodeHex | cut -c1`
+#RawdataUnitHex=`echo $ReceivedCodeHex | cut -c2`
+
+#RawdataHouseUnitDec=`echo "ibase=16; $RawdataHouseUnitHex" | bc`
+#RawdataUnitDec=`echo "ibase=16; $RawdataUnitHex" | bc`
+
+#TempCode=$(($RawdataHouseUnitDec+$RawdataUnitDec))
 
